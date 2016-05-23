@@ -330,25 +330,25 @@ class PrerequisiteContentRelationship(models.Model):
     """
     Predefine the prerequisite relationship between two ContentNode objects.
     """
-    contentnode_1 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
-    contentnode_2 = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
+    target_node = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_1')
+    prerequisite = models.ForeignKey(ContentNode, related_name='%(app_label)s_%(class)s_2')
 
     class Meta:
-        unique_together = ['contentnode_1', 'contentnode_2']
+        unique_together = ['target_node', 'contentnode_2']
 
     def clean(self, *args, **kwargs):
         # self reference exception
-        if self.contentnode_1 == self.contentnode_2:
+        if self.target_node == self.prerequisite:
             raise IntegrityError('Cannot self reference as prerequisite.')
         # immediate cyclic exception
         elif PrerequisiteContentRelationship.objects.using(self._state.db)\
-                .filter(contentnode_1=self.contentnode_2, contentnode_2=self.contentnode_1):
+                .filter(target_node=self.prerequisite, prerequisite=self.target_node):
             raise IntegrityError(
                 'Note: Prerequisite relationship is directional! %s and %s cannot be prerequisite of each other!'
-                % (self.contentnode_1, self.contentnode_2))
+                % (self.target_node, self.prerequisite))
         # distant cyclic exception
         # elif <this is a nice to have exception, may implement in the future when the priority raises.>
-        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.contentnode_1, self.contentnode_2))
+        #     raise Exception('Note: Prerequisite relationship is acyclic! %s and %s forms a closed loop!' % (self.target_node, self.prerequisite))
         super(PrerequisiteContentRelationship, self).clean(*args, **kwargs)
 
     def save(self, *args, **kwargs):
