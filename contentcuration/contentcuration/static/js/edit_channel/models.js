@@ -148,7 +148,7 @@ var ContentNodeModel = BaseModel.extend({
 				available : false,
 				format_size: file_data.data.size,
 				quality: "normal",
-				contentmetadata : this.id,
+				contentnode : this.id,
 				fileformat : this.get_fileformat(file_data.data.type).id
 			},{
 				success:function(){
@@ -172,7 +172,7 @@ var ContentNodeModel = BaseModel.extend({
 	get_formats:function(){
 		var formats = new FileFormatCollection();
 		formats.fetch({async:false});
-		return formats.where({contentmetadata : this.id});
+		return formats.where({contentnode : this.id});
 	},
 	get_fileformat:function(type){
 		return window.fileformats.findWhere({extension: type});
