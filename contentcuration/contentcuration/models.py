@@ -11,54 +11,7 @@ from django.db.utils import ConnectionDoesNotExist
 from mptt.models import MPTTModel, TreeForeignKey
 from django.utils.translation import ugettext as _
 
-#from kolibri.content.models import *
 from constants import content_kinds, extensions, presets
-
-class Channel(models.Model):
-    """ Permissions come from association with organizations """
-    channel_id = models.UUIDField(primary_key=True, default=uuid4)
-    name = models.CharField(max_length=200)
-    description = models.CharField(max_length=400, blank=True)
-    author = models.CharField(max_length=400, blank=True)
-    editors = models.ManyToManyField(
-        'auth.User',
-        related_name='editable_channels',
-        verbose_name=_("editors"),
-        help_text=_("Users with edit rights"),
-    )
-
-    published = models.ForeignKey('TopicTree', null=True, blank=True, related_name='published')
-    deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
-    clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
-    draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
-    bookmarked_by = models.ManyToManyField(
-        'auth.User',
-        related_name='bookmarked_channels',
-        verbose_name=_("bookmarded by"),
-    )
-
-    def save(self, *args, **kwargs):
-        super(Channel, self).save(*args, **kwargs)
-        if not self.draft:
-            self.draft = TopicTree.objects.create(channel=self, name=self.name + " draft")
-            self.draft.save()
-            self.clipboard = TopicTree.objects.create(channel=self, name=self.name + " clipboard")
-            self.clipboard.save()
-            self.deleted = TopicTree.objects.create(channel=self, name=self.name + " deleted")
-            self.deleted.save()
-            self.save()
-
-    """
-    def delete(self):
-        logging.warning("Channel Delete")
-        self.draft.delete()
-        self.clipboard.delete()
-        self.deleted.delete()
-        super(Channel, self).delete()
-    """
-    class Meta:
-        verbose_name = _("Channel")
-        verbose_name_plural = _("Channels")
 
 def content_copy_name(instance, filename):
     """
@@ -94,6 +47,53 @@ class ContentCopyTracking(models.Model):
     """
     referenced_count = models.IntegerField(blank=True, null=True)
     content_copy_id = models.CharField(max_length=400, unique=True)
+
+class Channel(models.Model):
+    """ Permissions come from association with organizations """
+    channel_id = models.UUIDField(primary_key=True, default=uuid4)
+    name = models.CharField(max_length=200)
+    description = models.CharField(max_length=400, blank=True)
+    author = models.CharField(max_length=400, blank=True)
+    version = models.CharField(max_length=15, default='v0.01')
+    thumbnail = models.TextField(blank=True)
+    editors = models.ManyToManyField(
+        'auth.User',
+        related_name='editable_channels',
+        verbose_name=_("editors"),
+        help_text=_("Users with edit rights"),
+    )
+    published = models.ForeignKey('TopicTree', null=True, blank=True, related_name='published')
+    deleted =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='deleted')
+    clipboard =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='clipboard')
+    draft =  models.ForeignKey('TopicTree', null=True, blank=True, related_name='draft')
+    bookmarked_by = models.ManyToManyField(
+        'auth.User',
+        related_name='bookmarked_channels',
+        verbose_name=_("bookmarded by"),
+    )
+
+    def save(self, *args, **kwargs):
+        super(Channel, self).save(*args, **kwargs)
+        if not self.draft:
+            self.draft = TopicTree.objects.create(channel=self, name=self.name + " draft")
+            self.draft.save()
+            self.clipboard = TopicTree.objects.create(channel=self, name=self.name + " clipboard")
+            self.clipboard.save()
+            self.deleted = TopicTree.objects.create(channel=self, name=self.name + " deleted")
+            self.deleted.save()
+            self.save()
+
+    """
+    def delete(self):
+        logging.warning("Channel Delete")
+        self.draft.delete()
+        self.clipboard.delete()
+        self.deleted.delete()
+        super(Channel, self).delete()
+    """
+    class Meta:
+        verbose_name = _("Channel")
+        verbose_name_plural = _("Channels")
 
 class TopicTree(models.Model):
     """Base model for all channels"""

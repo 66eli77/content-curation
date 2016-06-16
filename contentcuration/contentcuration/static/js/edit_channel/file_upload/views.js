@@ -30,9 +30,7 @@ var FileModalView = BaseViews.BaseModalView.extend({
         this.$(".modal").on("hide.bs.modal", this.close);
     },
     close_file_uploader:function(){
-        console.log("RETURN COLLECTION", this.file_upload_view.returnCollection);
       this.callback(this.file_upload_view.returnCollection);
-      console.log("FILE LIST:", this.file_upload_view.file_list);
       this.close();
     }
 });
@@ -203,6 +201,9 @@ var FileUploadView = BaseViews.BaseListView.extend({
         this.container.$("#formats_step_number").addClass("active_number");
         this.uploading = false;
         this.render();
+        if(this.check_completed()){
+            this.enable_submit();
+        }
     },
     go_to_upload:function(){
         this.container.$("#formats_step_number").removeClass("active_number");
@@ -241,7 +242,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
     className: "format_item row",
     files: [],
     format_views:[],
-    files_to_delete:new Models.FileCollection(),
     indent: 0,
     'id': function() {
         return "format_item_" + this.model.filename;
@@ -260,6 +260,7 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         this.initial = options.initial;
         this.presets = options.presets;
         this.inline = options.inline;
+        this.files_to_delete=new Models.FileCollection(),
         this.size = 0;
         this.render();
         this.$(".save_initial_format").attr("disabled", "disabled");
@@ -353,7 +354,6 @@ var FormatItem = BaseViews.BaseListNodeItemView.extend({
         }
     },
     toggle_formats:function(){
-        console.log("TOGGLING...");
         if(this.$el.find(".expand_format_editor").hasClass("glyphicon-triangle-bottom")){
             this.$el.find(".format_editor_list").slideUp();
             this.$el.find(".expand_format_editor").removeClass("glyphicon-triangle-bottom");

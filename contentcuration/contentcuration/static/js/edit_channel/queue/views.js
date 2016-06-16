@@ -108,13 +108,8 @@ var QueueList = BaseViews.BaseListView.extend({
 		}));
 
 		this.load_content();
-		console.log("COUNT IS:", this.model.get("total_count"));
 		if(this.add_controls){
-			var count = this.views.length;
-			this.views.forEach(function(entry){
-				count += entry.model.get("total_count");
-			});
-			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(count);
+			$((this.is_clipboard)? ".queue-badge" : ".trash-badge").html(this.model.get("total_count"));
 		}
 
 		this.$el.data("container", this);
@@ -153,7 +148,10 @@ var QueueList = BaseViews.BaseListView.extend({
 				var self = this;
 				this.display_load("Deleting Content...", function(){
 					for(var i = 0; i < list.length; i++){
-						$("#" + list[i].id).data("data").remove_item();
+						if($("#" + list[i].id).data("data")){
+							$("#" + list[i].id).data("data").remove_item();
+						}
+
 					}
 					self.render();
 				});
@@ -184,7 +182,6 @@ var QueueList = BaseViews.BaseListView.extend({
 		this.add_to_view();
 	},
 	add_to_list:function(collection){
-		console.log("VIEWS ARE:", collection);
 		this.add_nodes(collection, this.childrenCollection.length + 1);
 		this.model.fetch({async:false});
 	},
@@ -201,17 +198,15 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 	template: require("./hbtemplates/queue_item.handlebars"),
 	tagName: "li",
 	'id': function() {
-		return "queue_item_" + this.model.get("id");
+		return this.model.get("id");
 	},
 	initialize: function(options) {
 		_.bindAll(this, 'remove_item', 'toggle','edit_item', 'submit_item');
-		//console.log("loading", this.model);
 		this.containing_list_view = options.containing_list_view;
 		this.allow_edit = false;
 		this.is_clipboard = options.is_clipboard;
 		this.index = options.index;
 		this.container=options.container;
-		//console.log("model is now", this.model);
 		this.render();
 	},
 	events: {
@@ -221,6 +216,10 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 		'click .submit_content' : "submit_item",
 		'keydown .queue_title_input' : "submit_item",
 		'dblclick .queue_item_title' : 'edit_item'
+	},
+	reload:function(){
+		this.model.fetch({async:false});
+		this.render();
 	},
 	render: function() {
 		this.$el.html(this.template({
@@ -260,6 +259,7 @@ var QueueItem = BaseViews.BaseListNodeItemView.extend({
 			model: this.model,
 			container: this.container
 		});
+		this.$el.find("#" + this.id() +"_sub").append(this.subfile_view.el);
 	},
 	delete_content:function(){
 		event.stopPropagation();

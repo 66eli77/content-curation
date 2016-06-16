@@ -60,6 +60,7 @@ var TreeEditView = BaseViews.BaseView.extend({
 			is_clipboard : this.is_clipboard
 		}));
 		this.add_container(this.containers.length, this.model);
+		$("#channel-edit-content-wrapper").data("data", this);
 	},
 	events: {
 		'click .copy_button' : 'copy_content',
@@ -269,8 +270,6 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 		this.containing_list_view = options.containing_list_view;
 		this.index = options.index;
 		this.render();
-
-		//console.log(this.model.get("title") + " parent is " + this.model.get("parent") + " and has index " + this.index);
 	},
 
 	render:function(){
@@ -278,13 +277,15 @@ var ContentItem = BaseViews.BaseListNodeItemView.extend({
 			node: this.model,
 			isfolder: this.model.get("kind").toLowerCase() == "topic",
 			edit_mode: this.edit_mode,
-			allow_edit: this.allow_edit,
-			resource_count : this.model.get("resource_count"),
-			resource_size:this.model.get("resource_size")
+			allow_edit: this.allow_edit
 		}));
 		this.$el.data("data", this);
 		if($("#hide_details_checkbox").attr("checked"))
 			this.$el.find("label").addClass("hidden_details");
+	},
+	reload:function(){
+		this.model.fetch({async:false});
+		this.render();
 	},
 	events: {
 		'click .edit_folder_button': 'edit_folder',
